@@ -55,16 +55,16 @@ object YoutubeDownload {
 		}
 	}
 
-	fun getYtAudioStream(videoId: String): CompletableFuture<AudioStream> {
+	fun getYtAudioStream(videoId: String): CompletableFuture<AudioStream?> {
 		return getYtSeekable(videoId)
 			.thenApply { stream ->
 				if (stream == null) {
                     println("YOUTUBE VIDEO NOT FOUND...")
                     null
                 } else {
-                    AudioStreamVelvet(stream)
+                    AudioStreamVelvet(stream) as AudioStream
                 }
-			}
+			}.exceptionally { it.printStackTrace(); null }
 	}
 
 	private fun getYtSeekable(videoId: String): CompletableFuture<ISeekableInput?> {
