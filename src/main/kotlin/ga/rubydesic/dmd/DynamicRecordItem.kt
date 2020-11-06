@@ -51,6 +51,7 @@ class DynamicRecordItem(properties: Properties?) : Item(properties) {
 //		val youtubeId = musicId.substring(3)
 
 		YoutubeDownload.getTopResultId(name).thenAccept { youtubeId ->
+            if (youtubeId == null) return@thenAccept
 			PlayerStream.watching(ctx.level, ctx.clickedPos).forEach { player ->
 				val data = FriendlyByteBuf(Unpooled.buffer())
 				ClientboundPlayMusicPacket(MusicSource.YOUTUBE, ctx.clickedPos, youtubeId).write(data)

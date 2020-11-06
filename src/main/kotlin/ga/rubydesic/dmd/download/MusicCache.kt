@@ -16,10 +16,10 @@ object MusicCache {
 	val ioPool: ExecutorService = Executors.newCachedThreadPool()
 
 	fun getSeekableInput(path: Path, url: String): ISeekableInput {
-		if (Files.exists(path)) {
-			println("Using existing file: $path")
-			return FileSeekableInput(path.toFile().inputStream())
-		}
+//		if (Files.exists(path)) {
+//			println("Using existing file: $path")
+//			return FileSeekableInput(path.toFile().inputStream())
+//		}
 
 		return (currentlyDownloading.computeIfAbsent(path) {
 			println("Downloading to $path from $url")

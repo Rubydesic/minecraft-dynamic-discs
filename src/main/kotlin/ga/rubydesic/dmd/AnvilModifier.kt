@@ -12,6 +12,7 @@ fun modifyAnvilResult(result: ItemStack, server: MinecraftServer) {
 		val name = result.displayName.string.substring(1, result.displayName.string.length - 1)
 		YoutubeDownload.getTopResultId(name)
 			.thenAccept { id ->
+                if (id == null) return@thenAccept
 				YoutubeDownload.getYtTitle(id).thenAcceptAsync({ title ->
 					result.hoverName = TextComponent(title)
 					result.tag?.put("music_id", StringTag.valueOf("yt-$id"))

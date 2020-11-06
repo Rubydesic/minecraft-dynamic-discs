@@ -16,13 +16,15 @@ import java.net.URLEncoder
 import java.nio.file.Files
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionException
+import java.util.concurrent.TimeUnit
 
 object YoutubeDownload {
 
 	private val downloader = YoutubeDownloader()
-	private val searchCache: Cache<String, CompletableFuture<String>> =
-		CacheBuilder.newBuilder().maximumSize(2048).build()
-
+	private val searchCache: Cache<String, CompletableFuture<String?>> =
+		CacheBuilder.newBuilder().maximumSize(4096).build()
+    private val videoCache: Cache<String, CompletableFuture<YoutubeVideo?>> =
+        CacheBuilder.newBuilder().maximumSize(4096).build()
 
 	private const val YOUTUBE_API_KEY = "AIzaSyCTSK0xqLCZQBMJLC8eAsuv9v_i0bjkAYU";
 	private val ytCacheDir = cacheDir.resolve("youtube")
@@ -35,7 +37,7 @@ object YoutubeDownload {
 		return getYtVideo(videoId).thenApply { it?.details()?.title() }
 	}
 
-	fun getTopResultId(query: String): CompletableFuture<String> {
+	fun getTopResultId(query: String): CompletableFuture<String?> {
 		return searchCache.get(query) {
 			CompletableFuture.supplyAsync({
 				val encodedQuery = URLEncoder.encode(query, "UTF-8")
@@ -44,8 +46,10 @@ object YoutubeDownload {
 				val json = JsonParser().parse(reader.readText())
 				reader.close()
 
-				val result = json.asJsonObject["items"].asJsonArray[0].asJsonObject
-				val id = result["id"].asJsonObject["videoId"].asString
+                val items = json.asJsonObject["items"]
+                if (items.asJsonArray.size() == 0) return@supplyAsync null
+
+				val id = items.asJsonArray[0].asJsonObject["id"].asJsonObject["videoId"].asString
 				id
 			}, MusicCache.ioPool)
 		}
@@ -67,12 +71,22 @@ object YoutubeDownload {
 		}
 	}
 
+    private fun getYtVideoFresh(videoId: String): CompletableFuture<YoutubeVideo?> {
+        val future = createYtVideoFuture(videoId)
+        videoCache.put(videoId, future)
+        return future
+    }
+
 	private fun getYtVideo(videoId: String): CompletableFuture<YoutubeVideo?> {
-		return CompletableFuture.supplyAsync({ downloader.getVideo(videoId) }, MusicCache.ioPool)
+		return videoCache.get(videoId) { createYtVideoFuture(videoId) }
 	}
 
+    private fun createYtVideoFuture(videoId: String): CompletableFuture<YoutubeVideo?> {
+        return CompletableFuture.supplyAsync({ downloader.getVideo(videoId) }, MusicCache.ioPool)
+    }
+
 	fun getYtM4aUrl(videoId: String): CompletableFuture<String?> {
-		return getYtVideo(videoId).thenApply { video ->
+		return getYtVideoFresh(videoId).thenApply { video ->
 			if (video == null) return@thenApply null
 
 			val m4as = video.findAudioWithExtension(Extension.M4A)

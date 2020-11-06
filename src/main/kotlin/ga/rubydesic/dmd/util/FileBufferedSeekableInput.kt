@@ -15,6 +15,7 @@ import kotlin.math.min
 
 private const val READ_BUFFER_SIZE = 4096
 
+@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 open class FileBufferedSeekableInput : InputStream, ISeekableInput {
 
 	private val input: InputStream
@@ -28,20 +29,22 @@ open class FileBufferedSeekableInput : InputStream, ISeekableInput {
             readBuffer.position(value)
         }
 
-	private val lock = Object()
+	private val lock: Object
 
 	constructor(input: InputStream, file: Path, size: Int) {
 		this.input = input
 		this.size = size
 		this.writeBuffer = FileChannel.open(file, CREATE, WRITE, READ).map(READ_WRITE, 0, size.toLong())
 		this.readBuffer = this.writeBuffer.slice()
+        this.lock = Object()
 	}
 
-	private constructor(input: InputStream, size: Int, writeBuffer: ByteBuffer, readBuffer: ByteBuffer) {
+	private constructor(input: InputStream, size: Int, writeBuffer: ByteBuffer, readBuffer: ByteBuffer, lock: Object) {
 		this.input = input
 		this.writeBuffer = writeBuffer
 		this.size = size
 		this.readBuffer = readBuffer
+        this.lock = lock
 	}
 
 	fun slice(): FileBufferedSeekableInput = FileBufferedSeekableInputSlice(this)
@@ -58,8 +61,8 @@ open class FileBufferedSeekableInput : InputStream, ISeekableInput {
                 len = input.read(buf)
                 lock.notifyAll()
             }
-            println("Read $read (${writeBuffer.position()}) bytes, size = $size")
-            println("%.1f%% downloaded".format(writeBuffer.position().toDouble() / size * 100))
+//            println("Read $read (${writeBuffer.position()}) bytes, size = $size")
+//            println("%.1f%% downloaded".format(writeBuffer.position().toDouble() / size * 100))
         }
     }
 
@@ -115,7 +118,7 @@ open class FileBufferedSeekableInput : InputStream, ISeekableInput {
 
 
 	private class FileBufferedSeekableInputSlice(backing: FileBufferedSeekableInput) :
-		FileBufferedSeekableInput(backing.input, backing.size, backing.writeBuffer, backing.readBuffer.slice()) {
+		FileBufferedSeekableInput(backing.input, backing.size, backing.writeBuffer, backing.readBuffer.slice(), backing.lock) {
 
 		override fun consumeInputStream() {
 			throw UnsupportedOperationException()
