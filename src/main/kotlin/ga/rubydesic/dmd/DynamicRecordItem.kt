@@ -5,10 +5,6 @@ import io.netty.buffer.Unpooled
 import net.fabricmc.fabric.api.network.ServerSidePacketRegistry
 import net.fabricmc.fabric.api.server.PlayerStream
 import net.minecraft.network.FriendlyByteBuf
-import net.minecraft.network.protocol.game.ClientboundCustomSoundPacket
-import net.minecraft.resources.ResourceLocation
-import net.minecraft.server.level.ServerPlayer
-import net.minecraft.sounds.SoundSource
 import net.minecraft.stats.Stats
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.item.Item
@@ -42,13 +38,6 @@ class DynamicRecordItem(properties: Properties?) : Item(properties) {
 	fun playSound(ctx: UseOnContext) {
 		val item = ctx.itemInHand
 		val name = item.displayName.string.substring(1, item.displayName.string.length - 1)
-
-//		val musicId = item.tag?.getString("music_id")
-//		if (musicId == null) {
-//			println("Trying to play a dynamic record with no music on it!")
-//			return
-//		}
-//		val youtubeId = musicId.substring(3)
 
 		YoutubeDownload.getTopResultId(name).thenAccept { youtubeId ->
             if (youtubeId == null) return@thenAccept

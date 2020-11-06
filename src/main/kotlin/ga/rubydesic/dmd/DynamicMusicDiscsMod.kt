@@ -1,9 +1,6 @@
 package ga.rubydesic.dmd
 
-import ga.rubydesic.dmd.download.MusicCache
-import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback
 import net.fabricmc.fabric.api.network.ClientSidePacketRegistry
-import net.minecraft.commands.Commands.literal
 import net.minecraft.core.Registry
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.item.CreativeModeTab
@@ -12,7 +9,7 @@ import java.nio.file.Paths
 
 // For support join https://discord.gg/v6v4pMv
 
-const val MOD_ID = "dmd";
+const val MOD_ID = "dynamic-discs";
 val cacheDir = Paths.get("dynamic-discs-cache")
 
 val dynamicRecordItem = DynamicRecordItem(Item.Properties().tab(CreativeModeTab.TAB_MISC).stacksTo(1))

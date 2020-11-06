@@ -2,7 +2,7 @@ plugins {
     id 'fabric-loom'
     id 'maven-publish'
     id "org.jetbrains.kotlin.jvm"
-    id "com.github.johnrengelman.shadow" version "4.0.4"
+    id "com.github.johnrengelman.shadow" version "5.0.0"
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -36,8 +36,10 @@ dependencies {
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
     shade "com.github.sealedtx:java-youtube-downloader:2.4.2"
-    compile 'com.github.zakgof:velvet-video:0.5.1'
-    compile 'com.github.zakgof:velvet-video-natives:0.2.7.full'
+    shade('com.github.zakgof:velvet-video:0.5.1'){
+        exclude module: "guava"
+    }
+    shade 'com.github.zakgof:velvet-video-natives:0.2.7.free'
 }
 
 processResources {
@@ -73,9 +75,13 @@ jar {
 }
 
 shadowJar {
-    classifier = null // No -all classifier
+    classifier "useless"
     configurations = [project.configurations.shade]
-    mergeServiceFiles() // https://github.com/johnrengelman/shadow/issues/304
+}
+
+remapJar {
+    dependsOn(shadowJar)
+    input.set(shadowJar.archivePath)
 }
 
 // configure the maven publication

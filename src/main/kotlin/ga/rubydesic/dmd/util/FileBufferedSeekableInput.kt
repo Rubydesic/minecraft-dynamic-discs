@@ -1,11 +1,8 @@
 package ga.rubydesic.dmd.util
 
 import com.zakgof.velvetvideo.ISeekableInput
-import com.zakgof.velvetvideo.impl.FileSeekableInput
-import io.netty.buffer.ByteBuf
 import java.io.InputStream
 import java.lang.Byte.toUnsignedInt
-import java.lang.UnsupportedOperationException
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.channels.FileChannel.MapMode.READ_WRITE
@@ -30,6 +27,7 @@ open class FileBufferedSeekableInput : InputStream, ISeekableInput {
         }
 
 	private val lock: Object
+    private var beganConsuming: Boolean
 
 	constructor(input: InputStream, file: Path, size: Int) {
 		this.input = input
@@ -37,6 +35,7 @@ open class FileBufferedSeekableInput : InputStream, ISeekableInput {
 		this.writeBuffer = FileChannel.open(file, CREATE, WRITE, READ).map(READ_WRITE, 0, size.toLong())
 		this.readBuffer = this.writeBuffer.slice()
         this.lock = Object()
+        this.beganConsuming = false
 	}
 
 	private constructor(input: InputStream, size: Int, writeBuffer: ByteBuffer, readBuffer: ByteBuffer, lock: Object) {
@@ -45,12 +44,16 @@ open class FileBufferedSeekableInput : InputStream, ISeekableInput {
 		this.size = size
 		this.readBuffer = readBuffer
         this.lock = lock
+        this.beganConsuming = true
 	}
 
-	fun slice(): FileBufferedSeekableInput = FileBufferedSeekableInputSlice(this)
+	fun slice(): FileBufferedSeekableInput = FileBufferedSeekableInput(input, size, writeBuffer, readBuffer.slice(), lock)
 
     // This should be called on a separate producer thread
     open fun consumeInputStream() {
+        if (beganConsuming) throw IllegalStateException("Already began consuming")
+        beganConsuming = true
+
         val buf = ByteArray(READ_BUFFER_SIZE)
         var len = input.read(buf)
         var read = 0
@@ -115,15 +118,5 @@ open class FileBufferedSeekableInput : InputStream, ISeekableInput {
     }
 
     override fun size(): Long = size.toLong()
-
-
-	private class FileBufferedSeekableInputSlice(backing: FileBufferedSeekableInput) :
-		FileBufferedSeekableInput(backing.input, backing.size, backing.writeBuffer, backing.readBuffer.slice(), backing.lock) {
-
-		override fun consumeInputStream() {
-			throw UnsupportedOperationException()
-		}
-
-	}
 }
 

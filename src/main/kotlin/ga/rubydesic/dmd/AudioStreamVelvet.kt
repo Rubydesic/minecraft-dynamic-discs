@@ -1,10 +1,8 @@
 package ga.rubydesic.dmd
 
 import com.zakgof.velvetvideo.ISeekableInput
-import com.zakgof.velvetvideo.impl.FileSeekableInput
 import com.zakgof.velvetvideo.impl.VelvetVideoLib
 import net.minecraft.client.sounds.AudioStream
-import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import javax.sound.sampled.AudioFormat
@@ -12,8 +10,6 @@ import javax.sound.sampled.AudioFormat.Encoding.PCM_SIGNED
 
 
 class AudioStreamVelvet(input: ISeekableInput, private val convertToMono: Boolean = true): AudioStream {
-
-    constructor(file: File) : this(FileSeekableInput(file.inputStream()))
 
     private val demuxer = VelvetVideoLib.getInstance().demuxer(input)
     private val stream = demuxer.audioStream(0)

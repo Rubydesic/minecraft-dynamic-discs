@@ -3,7 +3,6 @@
   "package": "ga.rubydesic.dmd.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "AnvilMenuMixin",
     "LevelRendererMixin",
     "SoundBufferLibraryMixin"
   ],
