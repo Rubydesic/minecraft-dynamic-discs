@@ -39,7 +39,7 @@ dependencies {
     shade('com.github.zakgof:velvet-video:0.5.1'){
         exclude module: "guava"
     }
-    shade 'com.github.zakgof:velvet-video-natives:0.2.7.free'
+    shade 'com.github.zakgof:velvet-video-natives:0.2.7.full'
 }
 
 processResources {

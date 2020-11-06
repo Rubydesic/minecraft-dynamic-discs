@@ -58,18 +58,20 @@ object YoutubeDownload {
 	fun getYtAudioStream(videoId: String): CompletableFuture<AudioStream> {
 		return getYtSeekable(videoId)
 			.thenApply { stream ->
-				if (stream == null) throw CompletionException(Exception("YOUTUBE VIDEO NOT FOUND"))
-				else AudioStreamVelvet(stream)
+				if (stream == null) {
+                    println("YOUTUBE VIDEO NOT FOUND...")
+                    null
+                } else {
+                    AudioStreamVelvet(stream)
+                }
 			}
 	}
 
 	private fun getYtSeekable(videoId: String): CompletableFuture<ISeekableInput?> {
 		val path = ytCacheDir.resolve("$videoId.m4a")
 
-		return getYtM4aUrl(videoId).thenApply { url ->
-			MusicCache.getSeekableInput(path, url ?: return@thenApply null)
-		}
-	}
+		return MusicCache.getSeekableInput(path) { getYtM4aUrl(videoId) }
+    }
 
     private fun getYtVideoFresh(videoId: String): CompletableFuture<YoutubeVideo?> {
         val future = createYtVideoFuture(videoId)
@@ -85,7 +87,7 @@ object YoutubeDownload {
         return CompletableFuture.supplyAsync({ downloader.getVideo(videoId) }, MusicCache.ioPool)
     }
 
-	fun getYtM4aUrl(videoId: String): CompletableFuture<String?> {
+	private fun getYtM4aUrl(videoId: String): CompletableFuture<String?> {
 		return getYtVideoFresh(videoId).thenApply { video ->
 			if (video == null) return@thenApply null
 
