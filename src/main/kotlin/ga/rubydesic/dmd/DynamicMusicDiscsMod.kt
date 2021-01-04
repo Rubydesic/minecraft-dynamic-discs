@@ -43,6 +43,12 @@ val Dispatchers.McClient get() = mcClientDispatcher
 fun init() {
     log.info("Dynamic Discs Loaded!")
     Analytics.event("Start Game", session = true)
+    Runtime.getRuntime().addShutdownHook(Thread {
+        runBlocking {
+            Analytics.event("End Game", session = false).join()
+        }
+    })
+
     Registry.register(Registry.ITEM, ResourceLocation(MOD_ID, "dynamic_disc"), dynamicRecordItem)
     ClientboundPlayMusicPacket.register(ClientSidePacketRegistry.INSTANCE)
 
@@ -58,7 +64,7 @@ fun deleteOldCache() {
 fun clearCacheIfOutdated() {
     try {
         val version = "1"
-        val versionFile = dir.resolve("version").toFile()
+        val versionFile = dir.resolve(".version").toFile()
         val actualVersion = FileUtils.readFileToString(versionFile, StandardCharsets.UTF_8)
         if (!versionFile.exists() || actualVersion != version) {
             log.info("Detected outdated cache version $actualVersion instead of $version, deleting it")

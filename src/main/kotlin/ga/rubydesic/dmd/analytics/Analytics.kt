@@ -6,6 +6,7 @@ import net.fabricmc.api.EnvType
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.Minecraft
 import org.apache.commons.io.FileUtils
+import org.apache.http.NameValuePair
 import org.apache.http.client.utils.URLEncodedUtils
 import org.apache.http.message.BasicNameValuePair
 import java.nio.charset.StandardCharsets
@@ -42,7 +43,7 @@ object Analytics {
         label: String? = null,
         value: Int = -1,
         session: Boolean? = null
-    ) {
+    ): Job {
         val category = when {
             isDedicatedServer -> "Dedicated Server"
             isLogicalServer == null -> "General Client"
@@ -50,7 +51,7 @@ object Analytics {
             else -> "Client"
         }
 
-        event(action, category, label, value, session)
+        return event(action, category, label, value, session)
     }
 
     fun event(
@@ -59,29 +60,34 @@ object Analytics {
         label: String? = null,
         value: Int = -1,
         newSession: Boolean? = null
-    ) {
-        GlobalScope.launch(Dispatchers.IO) {
-            val params = mutableListOf(
-                BasicNameValuePair("v", "1"),
-                BasicNameValuePair("cid", id.await()),
-                BasicNameValuePair("tid", TRACKING_CODE),
-                BasicNameValuePair("ea", action),
-                BasicNameValuePair("ec", category),
-                BasicNameValuePair("aid", MOD_ID),
-                BasicNameValuePair("av", MOD_VERSION),
-                BasicNameValuePair("cd1", javaVersion)
-            )
+    ): Job = GlobalScope.launch {
+        val params = mutableListOf(
+            BasicNameValuePair("v", "1"),
+            BasicNameValuePair("t", "event"),
+            BasicNameValuePair("cid", id.await()),
+            BasicNameValuePair("ua", USER_AGENT),
+            BasicNameValuePair("tid", TRACKING_CODE),
+            BasicNameValuePair("ea", action),
+            BasicNameValuePair("ec", category),
+            BasicNameValuePair("an", MOD_ID),
+            BasicNameValuePair("av", MOD_VERSION),
+            BasicNameValuePair("cd1", javaVersion)
+        )
 
-            if (newSession == true) params.add(BasicNameValuePair("sc", "start"))
-            else if (newSession == false) params.add(BasicNameValuePair("sc", "end"))
+        if (newSession == true) params.add(BasicNameValuePair("sc", "start"))
+        else if (newSession == false) params.add(BasicNameValuePair("sc", "end"))
 
-            if (language != null) params.add(BasicNameValuePair("ul", language))
-            if (label != null) params.add(BasicNameValuePair("el", label))
-            if (value > -1) params.add(BasicNameValuePair("ev", value.toString()))
+        if (language != null) params.add(BasicNameValuePair("ul", language))
+        if (label != null) params.add(BasicNameValuePair("el", label))
+        if (value > -1) params.add(BasicNameValuePair("ev", value.toString()))
 
-            val body = URLEncodedUtils.format(params, StandardCharsets.UTF_8)
-
-            httpPost("http://www.google-analytics.com/collect", body.toByteArray())
-        }
+        sendToAnalytics(params)
     }
+
+    private suspend fun sendToAnalytics(params: Collection<NameValuePair>) = withContext(Dispatchers.IO) {
+        val body = URLEncodedUtils.format(params, StandardCharsets.UTF_8)
+
+        httpPost("https://www.google-analytics.com/collect", body.toByteArray())
+    }
+
 }

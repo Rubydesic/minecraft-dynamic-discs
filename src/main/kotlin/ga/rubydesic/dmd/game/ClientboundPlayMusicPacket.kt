@@ -30,7 +30,7 @@ data class ClientboundPlayMusicPacket constructor(
     }
 
     constructor(buf: FriendlyByteBuf) : this(
-        MusicSource.values.get(buf.readByte().toInt()),
+        MusicSource.values[buf.readByte().toInt()],
         buf.readBlockPos(),
         buf.readCharSequence(buf.readableBytes(), Charsets.UTF_8).toString()
     )

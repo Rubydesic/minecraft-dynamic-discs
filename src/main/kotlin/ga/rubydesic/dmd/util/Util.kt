@@ -49,12 +49,19 @@ fun toHexString(s: String) = toHexString(s.toByteArray())
 fun String.toHex() = toHexString(this)
 fun ByteArray.toHex() = toHexString(this)
 
-fun httpPost(url: String, body: ByteArray): Int {
+const val USER_AGENT = "Rubydesic Dynamic Discs"
+
+fun httpPost(url: String, body: ByteArray, fakeUserAgent: Boolean = false): Int {
     val url = URL(url)
     val conn = url.openConnection() as HttpURLConnection
     conn.requestMethod = "POST"
     conn.doOutput = true
 
+    val mozillaAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+        "(KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
+    val userAgent = if (fakeUserAgent) mozillaAgent else USER_AGENT
+
+    conn.setRequestProperty("User-Agent", userAgent)
     conn.setRequestProperty("Content-Length", body.size.toString())
     conn.outputStream.apply {
         write(body)
