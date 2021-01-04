@@ -1,6 +1,7 @@
 package ga.rubydesic.dmd.util
 
 import com.zakgof.velvetvideo.ISeekableInput
+import ga.rubydesic.dmd.log
 import java.io.InputStream
 import java.lang.Byte.toUnsignedInt
 import java.nio.ByteBuffer
@@ -15,10 +16,11 @@ private const val READ_BUFFER_SIZE = 4096
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 open class FileBufferedSeekableInput : InputStream, ISeekableInput {
 
-	private val input: InputStream
-	private val size: Int
-	private val writeBuffer: ByteBuffer
+    private val input: InputStream
+    private val size: Int
+    private val writeBuffer: ByteBuffer
     private val readBuffer: ByteBuffer
+
     // The position of the read buffer
     private var position
         get() = readBuffer.position()
@@ -26,28 +28,29 @@ open class FileBufferedSeekableInput : InputStream, ISeekableInput {
             readBuffer.position(value)
         }
 
-	private val lock: Object
+    private val lock: Object
     private var beganConsuming: Boolean
 
-	constructor(input: InputStream, file: Path, size: Int) {
-		this.input = input
-		this.size = size
-		this.writeBuffer = FileChannel.open(file, CREATE, WRITE, READ).map(READ_WRITE, 0, size.toLong())
-		this.readBuffer = this.writeBuffer.slice()
+    constructor(input: InputStream, file: Path, size: Int) {
+        this.input = input
+        this.size = size
+        this.writeBuffer = FileChannel.open(file, CREATE, WRITE, READ).map(READ_WRITE, 0, size.toLong())
+        this.readBuffer = this.writeBuffer.slice()
         this.lock = Object()
         this.beganConsuming = false
-	}
+    }
 
-	private constructor(input: InputStream, size: Int, writeBuffer: ByteBuffer, readBuffer: ByteBuffer, lock: Object) {
-		this.input = input
-		this.writeBuffer = writeBuffer
-		this.size = size
-		this.readBuffer = readBuffer
+    private constructor(input: InputStream, size: Int, writeBuffer: ByteBuffer, readBuffer: ByteBuffer, lock: Object) {
+        this.input = input
+        this.writeBuffer = writeBuffer
+        this.size = size
+        this.readBuffer = readBuffer
         this.lock = lock
         this.beganConsuming = true
-	}
+    }
 
-	fun slice(): FileBufferedSeekableInput = FileBufferedSeekableInput(input, size, writeBuffer, readBuffer.slice(), lock)
+    fun slice(): FileBufferedSeekableInput =
+        FileBufferedSeekableInput(input, size, writeBuffer, readBuffer.slice(), lock)
 
     // This should be called on a separate producer thread
     open fun consumeInputStream() {
@@ -57,6 +60,7 @@ open class FileBufferedSeekableInput : InputStream, ISeekableInput {
         val buf = ByteArray(READ_BUFFER_SIZE)
         var len = input.read(buf)
         var read = 0
+
         while (len != -1) {
             synchronized(lock) {
                 read += len
@@ -64,8 +68,10 @@ open class FileBufferedSeekableInput : InputStream, ISeekableInput {
                 len = input.read(buf)
                 lock.notifyAll()
             }
-//            println("Read $read (${writeBuffer.position()}) bytes, size = $size")
-//            println("%.1f%% downloaded".format(writeBuffer.position().toDouble() / size * 100))
+            if (read / READ_BUFFER_SIZE % 100 == 0) {
+                log.info("Read $read (${writeBuffer.position()}) bytes, size = $size")
+                log.info("%.1f%% downloaded".format(writeBuffer.position().toDouble() / size * 100))
+            }
         }
     }
 
@@ -76,7 +82,7 @@ open class FileBufferedSeekableInput : InputStream, ISeekableInput {
             (position + len > writeBuffer.position()) && (position + len <= size) -> {
                 synchronized(lock) {
                     while ((position + len > writeBuffer.position()) && (position + len <= size)) {
-                        println("Tried to read too much, need to read to ${position + len} / ${writeBuffer.position()}, waiting")
+                        log.info("Tried to read too much, need to read to ${position + len} / ${writeBuffer.position()}, waiting")
                         lock.wait()
                     }
 
@@ -98,7 +104,7 @@ open class FileBufferedSeekableInput : InputStream, ISeekableInput {
             position + 1 >= size -> -1
             position + 1 > writeBuffer.position() -> {
                 synchronized(lock) {
-                    println("Tried to read too much, ${position + 1} / ${writeBuffer.position()}, waiting")
+                    log.info("Tried to read too much, ${position + 1} / ${writeBuffer.position()}, waiting")
                     lock.wait()
                 }
                 read()

@@ -1,7 +1,9 @@
-package ga.rubydesic.dmd.mixin;
+package ga.rubydesic.dmd.mixin.client;
 
 import ga.rubydesic.dmd.DynamicMusicDiscsModKt;
-import ga.rubydesic.dmd.download.YoutubeDownload;
+import ga.rubydesic.dmd.download.MusicCache;
+import ga.rubydesic.dmd.download.MusicId;
+import ga.rubydesic.dmd.download.MusicSource;
 import net.minecraft.client.sounds.AudioStream;
 import net.minecraft.client.sounds.SoundBufferLibrary;
 import net.minecraft.resources.ResourceLocation;
@@ -12,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.concurrent.CompletableFuture;
 
+import static ga.rubydesic.dmd.DynamicMusicDiscsModKt.getLog;
 import static ga.rubydesic.dmd.UtilKt.getYoutubeVideoId;
 
 @Mixin(SoundBufferLibrary.class)
@@ -28,10 +31,11 @@ public class SoundBufferLibraryMixin {
         if (!loc.getNamespace().equals(DynamicMusicDiscsModKt.MOD_ID)) return;
 
         String youtubeVideoId = getYoutubeVideoId(loc.getPath());
-		System.out.println("Getting audio stream for: " + loc + " (" + youtubeVideoId + ")");
+		getLog().debug("Getting audio stream for: " + loc + " (" + youtubeVideoId + ")");
 		if (youtubeVideoId == null) return;
 
-        CompletableFuture<AudioStream> stream = YoutubeDownload.INSTANCE.getYtAudioStream(youtubeVideoId);
+        CompletableFuture<AudioStream> stream = MusicCache.INSTANCE.getAudioStreamFuture(
+                new MusicId(MusicSource.YOUTUBE, youtubeVideoId));
         ci.setReturnValue(stream);
     }
 

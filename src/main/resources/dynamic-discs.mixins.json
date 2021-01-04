@@ -2,9 +2,9 @@
   "required": true,
   "package": "ga.rubydesic.dmd.mixin",
   "compatibilityLevel": "JAVA_8",
-  "mixins": [
-    "LevelRendererMixin",
-    "SoundBufferLibraryMixin"
+  "client": [
+    "client.LevelRendererAccess",
+    "client.SoundBufferLibraryMixin"
   ],
   "injectors": {
     "defaultRequire": 1

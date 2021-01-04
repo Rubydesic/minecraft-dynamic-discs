@@ -1,7 +1,8 @@
-package ga.rubydesic.dmd
+package ga.rubydesic.dmd.game
 
 import com.mojang.math.Vector3d
-import net.minecraft.client.resources.sounds.SimpleSoundInstance
+import ga.rubydesic.dmd.MOD_ID
+import ga.rubydesic.dmd.download.MusicId
 import net.minecraft.client.resources.sounds.Sound
 import net.minecraft.client.resources.sounds.SoundInstance
 import net.minecraft.client.resources.sounds.SoundInstance.Attenuation
@@ -11,20 +12,21 @@ import net.minecraft.resources.ResourceLocation
 import net.minecraft.sounds.SoundSource
 
 class VideoSoundInstance @JvmOverloads constructor(
-	videoId: String,
-	private val position: Vector3d,
-	private val isRelative: Boolean = false,
-	private val attenuation: Attenuation = Attenuation.LINEAR,
-	attenuationDistance: Int = 100,
-	private val volume: Float = 1f,
-	private val pitch: Float = 1f,
+    videoId: MusicId,
+    private val position: Vector3d,
+    private val isRelative: Boolean = false,
+    private val attenuation: Attenuation = Attenuation.LINEAR,
+    attenuationDistance: Int = 100,
+    private val volume: Float = 1f,
+    private val pitch: Float = 1f,
 ) : SoundInstance {
 
-    private val loc = ResourceLocation(MOD_ID, "yt-${toHexString(videoId)}")
+    private val loc = ResourceLocation(MOD_ID, videoId.toString())
     override fun getLocation() = loc
 
-    private val weighed = WeighedSoundEvents(loc, videoId)
-    private val sound = Sound(loc.toString(), volume, pitch, 1, Sound.Type.SOUND_EVENT, true, false, attenuationDistance)
+    private val weighed = WeighedSoundEvents(loc, null)
+    private val sound =
+        Sound(loc.toString(), volume, pitch, 1, Sound.Type.SOUND_EVENT, true, false, attenuationDistance)
 
     override fun resolve(soundManager: SoundManager?) = weighed
     override fun getSound() = sound
