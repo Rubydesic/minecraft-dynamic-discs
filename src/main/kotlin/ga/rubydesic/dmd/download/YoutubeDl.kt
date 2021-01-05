@@ -43,7 +43,7 @@ object YoutubeDl {
         val binary = ytdlBinaryFuture.await()
 
         val output = runCommand(
-            binary.toAbsolutePath().toString(),
+            binary.toString(),
             "--dump-json",
             "--format",
             "bestaudio",

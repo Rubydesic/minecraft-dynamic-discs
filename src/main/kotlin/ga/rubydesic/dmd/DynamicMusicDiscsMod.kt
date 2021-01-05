@@ -65,13 +65,16 @@ fun clearCacheIfOutdated() {
     try {
         val version = "1"
         val versionFile = dir.resolve(".version").toFile()
-        if (!versionFile.exists()) {
+        if (versionFile.exists()) {
             val actualVersion = FileUtils.readFileToString(versionFile, StandardCharsets.UTF_8)
             if (actualVersion != version) {
                 log.info("Detected outdated cache version $actualVersion instead of $version, deleting it")
                 FileUtils.deleteDirectory(cacheDir.toFile())
                 FileUtils.writeStringToFile(versionFile, version, StandardCharsets.UTF_8)
             }
+        } else {
+            // Create version file if not exists
+            FileUtils.writeStringToFile(versionFile, version, StandardCharsets.UTF_8)
         }
     } catch (ex: Exception) {
         log.error("Could not delete cache", ex)
@@ -79,11 +82,11 @@ fun clearCacheIfOutdated() {
 }
 
 fun downloadYtDlBinary() {
-    val path = dir.resolve(if (SystemUtils.IS_OS_WINDOWS) "youtube-dl.exe" else "youtube-dl")
+    val path = dir.resolve(if (SystemUtils.IS_OS_WINDOWS) "youtube-dl.exe" else "youtube-dl").toAbsolutePath()
     if (Files.exists(path)) {
         log.info("youtube-dl binary already exists, running --update")
         ytdlBinaryFuture = GlobalScope.async(Dispatchers.IO) {
-            runCommand(path.toAbsolutePath().toString(), "--update")
+            runCommand(path.toString(), "--update")
             path
         }
     } else {
