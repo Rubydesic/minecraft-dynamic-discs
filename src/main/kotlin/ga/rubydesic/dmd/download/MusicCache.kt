@@ -33,7 +33,7 @@ object MusicCache {
 
     suspend fun searchYt(query: String): String? {
         return searchCache.getIfPresent(query) ?: run {
-            val result = YoutubeApi.search(query) ?: return null
+            val result = YoutubeDl.search(query) ?: return null
             searchCache.put(query, result)
             result
         }

@@ -35,7 +35,6 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
-    shade "com.github.sealedtx:java-youtube-downloader:2.4.2"
     shade('com.github.zakgof:velvet-video:0.5.1'){
         exclude module: "guava"
     }
