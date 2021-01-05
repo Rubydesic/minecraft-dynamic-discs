@@ -49,7 +49,6 @@ object YoutubeDl {
             "bestaudio",
             url
         )
-        println(output)
 
         return@withContext JsonParser().parse(output).asJsonObject
     }

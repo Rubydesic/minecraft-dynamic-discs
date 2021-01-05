@@ -65,11 +65,13 @@ fun clearCacheIfOutdated() {
     try {
         val version = "1"
         val versionFile = dir.resolve(".version").toFile()
-        val actualVersion = FileUtils.readFileToString(versionFile, StandardCharsets.UTF_8)
-        if (!versionFile.exists() || actualVersion != version) {
-            log.info("Detected outdated cache version $actualVersion instead of $version, deleting it")
-            FileUtils.deleteDirectory(cacheDir.toFile())
-            FileUtils.writeStringToFile(versionFile, version, StandardCharsets.UTF_8)
+        if (!versionFile.exists()) {
+            val actualVersion = FileUtils.readFileToString(versionFile, StandardCharsets.UTF_8)
+            if (actualVersion != version) {
+                log.info("Detected outdated cache version $actualVersion instead of $version, deleting it")
+                FileUtils.deleteDirectory(cacheDir.toFile())
+                FileUtils.writeStringToFile(versionFile, version, StandardCharsets.UTF_8)
+            }
         }
     } catch (ex: Exception) {
         log.error("Could not delete cache", ex)

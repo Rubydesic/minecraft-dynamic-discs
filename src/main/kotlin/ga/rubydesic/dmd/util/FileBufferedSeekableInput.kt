@@ -69,8 +69,8 @@ open class FileBufferedSeekableInput : InputStream, ISeekableInput {
                 lock.notifyAll()
             }
             if (read / READ_BUFFER_SIZE % 100 == 0) {
-                log.info("Read $read (${writeBuffer.position()}) bytes, size = $size")
-                log.info("%.1f%% downloaded".format(writeBuffer.position().toDouble() / size * 100))
+                log.debug("Read $read (${writeBuffer.position()}) bytes, size = $size")
+                log.debug("%.1f%% downloaded".format(writeBuffer.position().toDouble() / size * 100))
             }
         }
     }

@@ -4,6 +4,7 @@ import ga.rubydesic.dmd.McClient
 import ga.rubydesic.dmd.analytics.Analytics
 import ga.rubydesic.dmd.download.MusicCache
 import ga.rubydesic.dmd.download.MusicSource
+import ga.rubydesic.dmd.log
 import io.netty.buffer.Unpooled
 import kotlinx.coroutines.*
 import net.fabricmc.fabric.api.network.ServerSidePacketRegistry
@@ -18,7 +19,7 @@ import net.minecraft.world.level.block.JukeboxBlock
 
 class DynamicRecordItem(properties: Properties?) : Item(properties) {
 
-    fun playSound(ctx: UseOnContext) {
+    private fun playSound(ctx: UseOnContext) {
         val item = ctx.itemInHand
         val name = run {
             val d = item.displayName.string
@@ -30,7 +31,7 @@ class DynamicRecordItem(properties: Properties?) : Item(properties) {
             val id = MusicCache.searchYt(name)
 
             if (id == null) {
-                println("Could not find a result for the search: $name")
+                log.info("Could not find a result for the search: $name")
                 return@launch
             }
             PlayerStream.watching(ctx.level, ctx.clickedPos).forEach { player ->

@@ -33,7 +33,6 @@ inline fun <reified T> Gson.fromJson(json: Reader) = fromJson(json, T::class.jav
 inline fun <reified T> Gson.fromJson(json: String) = fromJson(json, T::class.java)
 
 fun runCommand(vararg args: String): String {
-    println("Executing command: " + args.contentToString())
     val stream = Runtime.getRuntime().exec(args).inputStream
     return stream.reader().readText()
 }
@@ -68,8 +67,6 @@ fun httpPost(url: String, body: ByteArray, fakeUserAgent: Boolean = false): Int 
         close()
     }
 
-    val resp = conn.inputStream.reader().readText()
-    println("${conn.responseCode} | $resp")
     return conn.responseCode
 }
 
