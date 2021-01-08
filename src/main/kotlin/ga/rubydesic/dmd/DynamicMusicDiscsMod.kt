@@ -4,8 +4,9 @@ import ga.rubydesic.dmd.analytics.Analytics
 import ga.rubydesic.dmd.game.ClientboundPlayMusicPacket
 import ga.rubydesic.dmd.game.DynamicRecordItem
 import kotlinx.coroutines.*
+import net.fabricmc.api.EnvType
 import net.fabricmc.fabric.api.network.ClientSidePacketRegistry
-import net.minecraft.client.Minecraft
+import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.core.Registry
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.item.CreativeModeTab
@@ -35,9 +36,7 @@ val dynamicRecordItem = DynamicRecordItem(Item.Properties().tab(CreativeModeTab.
 val log: Logger = LogManager.getLogger("Dynamic Discs")
 lateinit var ytdlBinaryFuture: Deferred<Path>
 
-private val mcClientDispatcher = Minecraft.getInstance().asCoroutineDispatcher()
-val Dispatchers.McClient get() = mcClientDispatcher
-
+val isDedicatedServer = FabricLoader.getInstance().environmentType == EnvType.SERVER
 
 @Suppress("unused")
 fun init() {
@@ -50,7 +49,10 @@ fun init() {
     })
 
     Registry.register(Registry.ITEM, ResourceLocation(MOD_ID, "dynamic_disc"), dynamicRecordItem)
-    ClientboundPlayMusicPacket.register(ClientSidePacketRegistry.INSTANCE)
+
+    if (!isDedicatedServer) {
+        ClientboundPlayMusicPacket.register(ClientSidePacketRegistry.INSTANCE)
+    }
 
     deleteOldCache()
     clearCacheIfOutdated()

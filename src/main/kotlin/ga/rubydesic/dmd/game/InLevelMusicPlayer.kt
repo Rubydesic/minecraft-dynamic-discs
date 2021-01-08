@@ -5,8 +5,8 @@ import ga.rubydesic.dmd.download.MusicCache
 import ga.rubydesic.dmd.download.MusicId
 import ga.rubydesic.dmd.game.VideoSoundInstance
 import ga.rubydesic.dmd.mixin.client.LevelRendererAccess
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.LevelRenderer
@@ -24,7 +24,7 @@ fun LevelRenderer.playYoutubeMusic(id: MusicId, blockPos: BlockPos) {
         lra.playingRecords.remove(blockPos)
     }
 
-    GlobalScope.launch(Dispatchers.McClient) {
+    GlobalScope.launch(minecraft.asCoroutineDispatcher()) {
         val info = MusicCache.getPlaybackInfo(id)
         minecraft.gui.setNowPlaying(TextComponent(info?.details?.title))
     }

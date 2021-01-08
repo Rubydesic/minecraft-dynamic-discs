@@ -2,8 +2,6 @@ package ga.rubydesic.dmd.analytics
 
 import ga.rubydesic.dmd.*
 import kotlinx.coroutines.*
-import net.fabricmc.api.EnvType
-import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.Minecraft
 import org.apache.commons.io.FileUtils
 import org.apache.http.NameValuePair
@@ -33,8 +31,7 @@ object Analytics {
         }
     }
 
-    val isDedicatedServer = FabricLoader.getInstance().environmentType == EnvType.SERVER
-    val language get() = Minecraft.getInstance()?.languageManager?.selected?.code
+    val language get() = if (isDedicatedServer) null else Minecraft.getInstance()?.languageManager?.selected?.code
     val javaVersion = getJavaVersion()
 
     fun event(

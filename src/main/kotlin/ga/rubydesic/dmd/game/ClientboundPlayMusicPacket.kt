@@ -5,6 +5,8 @@ import ga.rubydesic.dmd.download.MusicId
 import ga.rubydesic.dmd.download.MusicSource
 import ga.rubydesic.dmd.playYoutubeMusic
 import net.fabricmc.fabric.api.network.ClientSidePacketRegistry
+import net.fabricmc.fabric.api.network.PacketConsumer
+import net.fabricmc.fabric.api.network.PacketContext
 import net.minecraft.client.Minecraft
 import net.minecraft.core.BlockPos
 import net.minecraft.network.FriendlyByteBuf
@@ -19,13 +21,15 @@ data class ClientboundPlayMusicPacket constructor(
         val packetId = ResourceLocation(MOD_ID, "play_music")
 
         fun register(registry: ClientSidePacketRegistry) {
-            registry.register(packetId) { ctx, data ->
-                val (source, pos, id) = ClientboundPlayMusicPacket(data)
-                ctx.taskQueue.execute {
-                    Minecraft.getInstance().levelRenderer
-                        .playYoutubeMusic(MusicId(source, id), pos)
+            registry.register(packetId, object : PacketConsumer {
+                override fun accept(ctx: PacketContext, data: FriendlyByteBuf) {
+                    val (source, pos, id) = ClientboundPlayMusicPacket(data)
+                    ctx.taskQueue.execute {
+                        Minecraft.getInstance().levelRenderer
+                            .playYoutubeMusic(MusicId(source, id), pos)
+                    }
                 }
-            }
+            })
         }
     }
 

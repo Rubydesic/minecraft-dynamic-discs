@@ -1,6 +1,5 @@
 package ga.rubydesic.dmd.game
 
-import ga.rubydesic.dmd.McClient
 import ga.rubydesic.dmd.analytics.Analytics
 import ga.rubydesic.dmd.download.MusicCache
 import ga.rubydesic.dmd.download.MusicSource
@@ -26,7 +25,14 @@ class DynamicRecordItem(properties: Properties?) : Item(properties) {
             d.substring(1, d.length - 1)
         }
 
-        GlobalScope.launch(Dispatchers.McClient) {
+        val server = ctx.player?.server
+
+        if (server == null) {
+            log.error("Couldn't find a server object for player who used the music disc??")
+            return
+        }
+
+        GlobalScope.launch(server.asCoroutineDispatcher()) {
             Analytics.event("Search", false, name)
             val id = MusicCache.searchYt(name)
 
