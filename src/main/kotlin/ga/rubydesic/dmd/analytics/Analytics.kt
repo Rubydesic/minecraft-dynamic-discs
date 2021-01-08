@@ -4,9 +4,8 @@ import ga.rubydesic.dmd.*
 import kotlinx.coroutines.*
 import net.minecraft.client.Minecraft
 import org.apache.commons.io.FileUtils
-import org.apache.http.NameValuePair
-import org.apache.http.client.utils.URLEncodedUtils
-import org.apache.http.message.BasicNameValuePair
+import java.net.URLEncoder
+import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.util.*
 
@@ -59,34 +58,60 @@ object Analytics {
         newSession: Boolean? = null
     ): Job = GlobalScope.launch {
         val params = mutableListOf(
-            BasicNameValuePair("v", "1"),
-            BasicNameValuePair("t", "event"),
-            BasicNameValuePair("cid", id.await()),
-            BasicNameValuePair("ua", USER_AGENT),
-            BasicNameValuePair("tid", TRACKING_CODE),
-            BasicNameValuePair("ea", action),
-            BasicNameValuePair("ec", category),
-            BasicNameValuePair("an", MOD_ID),
-            BasicNameValuePair("av", MOD_VERSION),
-            BasicNameValuePair("cd1", javaVersion)
+            Pair("v", "1"),
+            Pair("t", "event"),
+            Pair("cid", id.await()),
+            Pair("ua", USER_AGENT),
+            Pair("tid", TRACKING_CODE),
+            Pair("ea", action),
+            Pair("ec", category),
+            Pair("an", MOD_ID),
+            Pair("av", MOD_VERSION),
+            Pair("cd1", javaVersion)
         )
 
-        if (newSession == true) params.add(BasicNameValuePair("sc", "start"))
-        else if (newSession == false) params.add(BasicNameValuePair("sc", "end"))
+        if (newSession == true) params.add(Pair("sc", "start"))
+        else if (newSession == false) params.add(Pair("sc", "end"))
 
-        if (language != null) params.add(BasicNameValuePair("ul", language))
-        if (label != null) params.add(BasicNameValuePair("el", label))
-        if (value > -1) params.add(BasicNameValuePair("ev", value.toString()))
+        val language = language
+        if (language != null) params.add(Pair("ul", language))
+        if (label != null) params.add(Pair("el", label))
+        if (value > -1) params.add(Pair("ev", value.toString()))
 
         sendToAnalytics(params)
     }
 
-    private suspend fun sendToAnalytics(params: Collection<NameValuePair>) = withContext(Dispatchers.IO) {
+    private suspend fun sendToAnalytics(params: Collection<Pair<String, String>>) = withContext(Dispatchers.IO) {
         if (System.getProperty("dmd.analytics") == "disable") return@withContext
 
-        val body = URLEncodedUtils.format(params, StandardCharsets.UTF_8)
-
-        httpPost("https://www.google-analytics.com/collect", body.toByteArray())
+        httpPost("https://www.google-analytics.com/collect", toQueryParams(params).toByteArray())
     }
 
+}
+
+fun toQueryParams(
+    params: Collection<Pair<String, String>>,
+    charset: Charset = StandardCharsets.UTF_8
+): String {
+    val params = params.map { (key, value) ->
+        Pair(
+            URLEncoder.encode(key, charset.name()),
+            URLEncoder.encode(value, charset.name())
+        )
+    }
+
+    if (params.isEmpty()) return ""
+    val builder = StringBuilder()
+
+    val iter = params.iterator()
+    val first = iter.next()
+
+    val (firstKey, firstValue) = first
+    builder.append("$firstKey=$firstValue");
+
+    for ((key, value) in iter) {
+        builder.append("&$key=$value")
+    }
+
+    return builder.toString()
 }

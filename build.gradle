@@ -35,7 +35,7 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
-    shade('com.github.zakgof:velvet-video:0.5.1'){
+    shade('com.github.zakgof:velvet-video:0.5.1') {
         exclude module: "guava"
     }
     shade 'com.github.zakgof:velvet-video-natives:0.2.7.full'

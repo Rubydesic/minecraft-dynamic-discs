@@ -26,7 +26,7 @@ import java.nio.file.Paths
 // For support join https://discord.gg/v6v4pMv
 
 const val MOD_ID = "dynamic-discs"
-const val MOD_VERSION = "2.0.1"
+const val MOD_VERSION = "2.0.2"
 
 val dir: Path = Paths.get("dynamic-discs")
 val cacheDir: Path = dir.resolve("cache")
