@@ -82,6 +82,8 @@ object Analytics {
     }
 
     private suspend fun sendToAnalytics(params: Collection<NameValuePair>) = withContext(Dispatchers.IO) {
+        if (System.getProperty("dmd.analytics") == "disable") return@withContext
+
         val body = URLEncodedUtils.format(params, StandardCharsets.UTF_8)
 
         httpPost("https://www.google-analytics.com/collect", body.toByteArray())
