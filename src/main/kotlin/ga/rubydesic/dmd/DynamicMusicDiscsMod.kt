@@ -26,7 +26,7 @@ import java.nio.file.Paths
 // For support join https://discord.gg/v6v4pMv
 
 const val MOD_ID = "dynamic-discs"
-const val MOD_VERSION = "2.0.2"
+const val MOD_VERSION = "2.0.3"
 
 val dir: Path = Paths.get("dynamic-discs")
 val cacheDir: Path = dir.resolve("cache")
@@ -41,6 +41,11 @@ val isDedicatedServer = FabricLoader.getInstance().environmentType == EnvType.SE
 @Suppress("unused")
 fun init() {
     log.info("Dynamic Discs Loaded!")
+
+    setupVelvet()
+
+    log.info("Natives extracted!")
+
     Analytics.event("Start Game", session = true)
     Runtime.getRuntime().addShutdownHook(Thread {
         runBlocking {
@@ -57,6 +62,38 @@ fun init() {
     deleteOldCache()
     clearCacheIfOutdated()
     downloadYtDlBinary()
+}
+
+fun setupVelvet() {
+    val target = Paths.get(System.getProperty("user.home"), ".velvet-video", "natives", "0.2.7.full")
+    Files.createDirectories(target)
+
+    if (SystemUtils.IS_OS_WINDOWS) {
+        val resource = "velvet-video-natives/windows64"
+        extractFile("swscale-5.dll", resource, target)
+        extractFile("swresample-3.dll", resource, target)
+        extractFile("libopenh264.dll", resource, target)
+        extractFile("libgcc_s_seh-1.dll", resource, target)
+        extractFile("avutil-56.dll", resource, target)
+        extractFile("avformat-58.dll", resource, target)
+        extractFile("avfilter-7.dll", resource, target)
+        extractFile("avcodec-58.dll", resource, target)
+    } else {
+        val resource = "velvet-video-natives/linux64"
+        extractFile("libswscale.so.5", resource, target)
+        extractFile("libswresample.so.3", resource, target)
+        extractFile("libopenh264.so.5", resource, target)
+        extractFile("libavutil.so.56", resource, target)
+        extractFile("libavformat.so.58", resource, target)
+        extractFile("libavfilter.so.7", resource, target)
+        extractFile("libavcodec.so.58", resource, target)
+    }
+
+}
+
+private fun extractFile(name: String, base: String, target: Path) {
+    log.info("Extracting /$base/$name...")
+    Files.copy(object {}.javaClass.getResourceAsStream("/$base/$name"), target.resolve(name))
 }
 
 fun deleteOldCache() {
@@ -105,6 +142,8 @@ fun downloadYtDlBinary() {
             log.info("Finished downloading youtube-dl binary")
             path
         }
+
     }
 }
+
 
