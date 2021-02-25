@@ -92,8 +92,10 @@ fun setupVelvet() {
 }
 
 private fun extractFile(name: String, base: String, target: Path) {
-    log.info("Extracting /$base/$name...")
-    Files.copy(object {}.javaClass.getResourceAsStream("/$base/$name"), target.resolve(name))
+    if (!Files.exists(target)) {
+        log.info("Extracting /$base/$name...")
+        Files.copy(object {}.javaClass.getResourceAsStream("/$base/$name"), target.resolve(name))
+    }
 }
 
 fun deleteOldCache() {
