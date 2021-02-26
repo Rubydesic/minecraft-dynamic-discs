@@ -92,9 +92,10 @@ fun setupVelvet() {
 }
 
 private fun extractFile(name: String, base: String, target: Path) {
-    if (!Files.exists(target)) {
+    val dest = target.resolve(name)
+    if (!Files.exists(dest)) {
         log.info("Extracting /$base/$name...")
-        Files.copy(object {}.javaClass.getResourceAsStream("/$base/$name"), target.resolve(name))
+        Files.copy(object {}.javaClass.getResourceAsStream("/$base/$name"), dest)
     }
 }
 
