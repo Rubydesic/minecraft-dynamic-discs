@@ -57,29 +57,30 @@ const val USER_AGENT = "Rubydesic Dynamic Discs"
 
 // disable ssl checks because mojang java doesn't have ssl public keys
 val allTrustingSSLSocketFactory = run {
-    val trustAllCerts: Array<TrustManager> = arrayOf(
-        object : X509TrustManager {
-            override fun checkClientTrusted(certs: Array<X509Certificate?>?, authType: String?) {}
-            override fun checkServerTrusted(certs: Array<X509Certificate?>?, authType: String?) {}
-            override fun getAcceptedIssuers(): Array<X509Certificate>? = null
-        }
-    )
+    val trustAllCerts: TrustManager = object : X509TrustManager {
+        override fun checkClientTrusted(certs: Array<X509Certificate?>?, authType: String?) {}
+        override fun checkServerTrusted(certs: Array<X509Certificate?>?, authType: String?) {}
+        override fun getAcceptedIssuers(): Array<X509Certificate>? = null
+    }
+
     val sc = SSLContext.getInstance("SSL")
-    sc.init(null, trustAllCerts, SecureRandom())
+    sc.init(null, arrayOf(trustAllCerts), SecureRandom())
 
     sc.socketFactory
 }
 
 fun httpPost(url: String, body: ByteArray, fakeUserAgent: Boolean = false): Int {
+    val oldDefault = HttpsURLConnection.getDefaultSSLSocketFactory()
+    HttpsURLConnection.setDefaultSSLSocketFactory(allTrustingSSLSocketFactory)
+
     val url = URL(url)
     val conn = url.openConnection() as HttpsURLConnection
 
-    conn.sslSocketFactory = allTrustingSSLSocketFactory
     conn.requestMethod = "POST"
     conn.doOutput = true
 
     val mozillaAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-        "(KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
+            "(KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
     val userAgent = if (fakeUserAgent) mozillaAgent else USER_AGENT
 
     conn.setRequestProperty("User-Agent", userAgent)
@@ -89,9 +90,10 @@ fun httpPost(url: String, body: ByteArray, fakeUserAgent: Boolean = false): Int 
         close()
     }
 
+    HttpsURLConnection.setDefaultSSLSocketFactory(oldDefault)
+
     return conn.responseCode
 }
-
 
 
 fun fromHexString(hex: String): String {
