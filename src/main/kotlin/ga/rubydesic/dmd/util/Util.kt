@@ -2,10 +2,15 @@ package ga.rubydesic.dmd
 
 import com.google.gson.Gson
 import java.io.Reader
-import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.ByteOrder
+import java.security.SecureRandom
+import java.security.cert.X509Certificate
 import java.util.regex.Pattern
+import javax.net.ssl.HttpsURLConnection
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 
 fun ByteArray.setShort(index: Int, value: Short) = setShort(index, value, ByteOrder.nativeOrder())
 
@@ -50,9 +55,26 @@ fun ByteArray.toHex() = toHexString(this)
 
 const val USER_AGENT = "Rubydesic Dynamic Discs"
 
+// disable ssl checks because mojang java doesn't have ssl public keys
+val allTrustingSSLSocketFactory = run {
+    val trustAllCerts: Array<TrustManager> = arrayOf(
+        object : X509TrustManager {
+            override fun checkClientTrusted(certs: Array<X509Certificate?>?, authType: String?) {}
+            override fun checkServerTrusted(certs: Array<X509Certificate?>?, authType: String?) {}
+            override fun getAcceptedIssuers(): Array<X509Certificate>? = null
+        }
+    )
+    val sc = SSLContext.getInstance("SSL")
+    sc.init(null, trustAllCerts, SecureRandom())
+
+    sc.socketFactory
+}
+
 fun httpPost(url: String, body: ByteArray, fakeUserAgent: Boolean = false): Int {
     val url = URL(url)
-    val conn = url.openConnection() as HttpURLConnection
+    val conn = url.openConnection() as HttpsURLConnection
+
+    conn.sslSocketFactory = allTrustingSSLSocketFactory
     conn.requestMethod = "POST"
     conn.doOutput = true
 
@@ -69,6 +91,8 @@ fun httpPost(url: String, body: ByteArray, fakeUserAgent: Boolean = false): Int 
 
     return conn.responseCode
 }
+
+
 
 fun fromHexString(hex: String): String {
     val str = StringBuilder()
