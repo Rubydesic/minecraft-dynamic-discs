@@ -37,6 +37,7 @@ dependencies {
 
     shade('com.github.zakgof:velvet-video:0.5.1') {
         exclude module: "guava"
+        exclude group: "org.ow2.asm"
     }
     shade 'com.github.zakgof:velvet-video-natives:0.2.7.full'
 }

@@ -56,7 +56,7 @@ fun ByteArray.toHex() = toHexString(this)
 const val USER_AGENT = "Rubydesic Dynamic Discs"
 
 // disable ssl checks because mojang java doesn't have ssl public keys
-val allTrustingSSLSocketFactory = run {
+private val allTrustingSSLSocketFactory = run {
     val trustAllCerts: TrustManager = object : X509TrustManager {
         override fun checkClientTrusted(certs: Array<X509Certificate?>?, authType: String?) {}
         override fun checkServerTrusted(certs: Array<X509Certificate?>?, authType: String?) {}

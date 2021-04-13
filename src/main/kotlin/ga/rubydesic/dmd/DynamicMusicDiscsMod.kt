@@ -1,5 +1,7 @@
 package ga.rubydesic.dmd
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import ga.rubydesic.dmd.analytics.Analytics
 import ga.rubydesic.dmd.game.ClientboundPlayMusicPacket
 import ga.rubydesic.dmd.game.DynamicRecordItem
@@ -26,15 +28,17 @@ import java.nio.file.Paths
 // For support join https://discord.gg/v6v4pMv
 
 const val MOD_ID = "dynamic-discs"
-const val MOD_VERSION = "2.0.4"
+const val MOD_VERSION = "2.0.5"
 
 val dir: Path = Paths.get("dynamic-discs")
 val cacheDir: Path = dir.resolve("cache")
+
 
 val dynamicRecordItem = DynamicRecordItem(Item.Properties().tab(CreativeModeTab.TAB_MISC).stacksTo(1))
 
 val log: Logger = LogManager.getLogger("Dynamic Discs")
 lateinit var ytdlBinaryFuture: Deferred<Path>
+lateinit var config: Config
 
 val isDedicatedServer = FabricLoader.getInstance().environmentType == EnvType.SERVER
 
@@ -42,6 +46,7 @@ val isDedicatedServer = FabricLoader.getInstance().environmentType == EnvType.SE
 fun init() {
     log.info("Dynamic Discs Loaded!")
 
+    readConfig()
     setupVelvet()
 
     log.info("Natives extracted!")
@@ -62,6 +67,24 @@ fun init() {
     deleteOldCache()
     clearCacheIfOutdated()
     downloadYtDlBinary()
+}
+
+fun readConfig() {
+    val configPath = dir.resolve("config.json")
+    if (Files.exists(configPath)) {
+        try {
+            config = Gson().fromJson(Files.newInputStream(configPath).bufferedReader())
+        } catch (ex: Exception) {
+            log.info("Failed to read config from config.json, resorting to default...")
+            config = Config()
+        }
+    } else {
+        config = Config()
+        val out = Files.newOutputStream(configPath).bufferedWriter()
+        GsonBuilder().setPrettyPrinting().create().toJson(config, out)
+        out.close()
+    }
+
 }
 
 fun setupVelvet() {
@@ -126,7 +149,13 @@ fun clearCacheIfOutdated() {
 fun downloadYtDlBinary() {
     val path = dir.resolve(if (SystemUtils.IS_OS_WINDOWS) "youtube-dl.exe" else "youtube-dl").toAbsolutePath()
     if (Files.exists(path)) {
-        log.info("youtube-dl binary already exists, running --update")
+        log.info("youtube-dl binary already exists")
+        if (path.toFile().setExecutable(true, false)) {
+            log.info("Made youtube-dl binary executable")
+        } else {
+            log.info("Failed to make youtube-dl binary executable...")
+        }
+        log.info("Running youtube-dl --update")
         ytdlBinaryFuture = GlobalScope.async(Dispatchers.IO) {
             runCommand(path.toString(), "--update")
             path

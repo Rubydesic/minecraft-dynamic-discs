@@ -2,6 +2,7 @@ package ga.rubydesic.dmd.game
 
 import com.mojang.math.Vector3d
 import ga.rubydesic.dmd.MOD_ID
+import ga.rubydesic.dmd.config
 import ga.rubydesic.dmd.download.MusicId
 import net.minecraft.client.resources.sounds.Sound
 import net.minecraft.client.resources.sounds.SoundInstance
@@ -16,7 +17,7 @@ class VideoSoundInstance @JvmOverloads constructor(
     private val position: Vector3d,
     private val isRelative: Boolean = false,
     private val attenuation: Attenuation = Attenuation.LINEAR,
-    attenuationDistance: Int = 100,
+    attenuationDistance: Int = config.attenuationDistance,
     private val volume: Float = 1f,
     private val pitch: Float = 1f,
 ) : SoundInstance {

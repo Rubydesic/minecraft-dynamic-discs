@@ -3,7 +3,6 @@ package ga.rubydesic.dmd.game
 import ga.rubydesic.dmd.MOD_ID
 import ga.rubydesic.dmd.download.MusicId
 import ga.rubydesic.dmd.download.MusicSource
-import ga.rubydesic.dmd.playYoutubeMusic
 import net.fabricmc.fabric.api.network.ClientSidePacketRegistry
 import net.fabricmc.fabric.api.network.PacketConsumer
 import net.fabricmc.fabric.api.network.PacketContext

@@ -1,9 +1,8 @@
-package ga.rubydesic.dmd
+package ga.rubydesic.dmd.game
 
 import com.mojang.math.Vector3d
 import ga.rubydesic.dmd.download.MusicCache
 import ga.rubydesic.dmd.download.MusicId
-import ga.rubydesic.dmd.game.VideoSoundInstance
 import ga.rubydesic.dmd.mixin.client.LevelRendererAccess
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
