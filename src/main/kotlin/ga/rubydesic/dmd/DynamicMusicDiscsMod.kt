@@ -46,6 +46,7 @@ val isDedicatedServer = FabricLoader.getInstance().environmentType == EnvType.SE
 fun init() {
     log.info("Dynamic Discs Loaded!")
 
+    Files.createDirectories(dir)
     readConfig()
     setupVelvet()
 
