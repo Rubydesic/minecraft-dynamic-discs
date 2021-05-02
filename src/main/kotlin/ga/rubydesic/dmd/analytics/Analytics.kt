@@ -30,8 +30,10 @@ object Analytics {
         }
     }
 
-    val language get() = if (isDedicatedServer) null else Minecraft.getInstance()?.languageManager?.selected?.code
-    val javaVersion = getJavaVersion()
+    private val language get() = if (isDedicatedServer) null else Minecraft.getInstance()?.languageManager?.selected?.code
+    private val javaVersion = getJavaVersion()
+    private val isAnalyticsDisabled get() =
+        System.getProperty("dmd.analytics") == "disable" || !config.analytics
 
     fun event(
         action: String,
@@ -82,7 +84,7 @@ object Analytics {
     }
 
     private suspend fun sendToAnalytics(params: Collection<Pair<String, String>>) = withContext(Dispatchers.IO) {
-        if (System.getProperty("dmd.analytics") == "disable") return@withContext
+        if (isAnalyticsDisabled) return@withContext
 
         httpPost("https://www.google-analytics.com/collect", toQueryParams(params).toByteArray())
     }

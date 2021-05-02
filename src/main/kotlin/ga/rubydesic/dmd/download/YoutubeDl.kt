@@ -15,10 +15,10 @@ object YoutubeDl {
     /**
      * Returns the ID of the top result for the search
      */
-    suspend fun search(search: String): String? = getYoutubeDlOutput("ytsearch:$search")["id"].asString
+    suspend fun search(search: String): String? = getYoutubeDlOutput("ytsearch:$search")?.get("id")?.asString
 
-    suspend fun getInfo(url: String): DownloadInfo {
-        val json = getYoutubeDlOutput(url)
+    suspend fun getInfo(url: String): DownloadInfo? {
+        val json = getYoutubeDlOutput(url) ?: return null
 
         val headers = json["http_headers"].asJsonObject
         val realUrl = json["url"].asString
@@ -39,7 +39,7 @@ object YoutubeDl {
         return DownloadInfo(getStream, AudioDetails(title, id))
     }
 
-    private suspend fun getYoutubeDlOutput(url: String): JsonObject = withContext(Dispatchers.IO) {
+    private suspend fun getYoutubeDlOutput(url: String): JsonObject? = withContext(Dispatchers.IO) {
         val binary = ytdlBinaryFuture.await()
 
         val output = runCommand(
@@ -50,6 +50,8 @@ object YoutubeDl {
             url
         )
 
-        return@withContext JsonParser().parse(output).asJsonObject
+        return@withContext if (output.isNotBlank())
+            JsonParser().parse(output).asJsonObject
+        else null
     }
 }

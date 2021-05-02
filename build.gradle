@@ -1,6 +1,6 @@
 plugins {
-    id 'fabric-loom'
-    id 'maven-publish'
+    id "fabric-loom"
+    id "maven-publish"
     id "org.jetbrains.kotlin.jvm"
     id "com.github.johnrengelman.shadow" version "5.0.0"
 }
@@ -35,11 +35,11 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
-    shade('com.github.zakgof:velvet-video:0.5.1') {
+    shade("com.github.zakgof:velvet-video:0.5.1") {
         exclude module: "guava"
         exclude group: "org.ow2.asm"
     }
-    shade 'com.github.zakgof:velvet-video-natives:0.2.7.full'
+    shade "com.github.zakgof:velvet-video-natives:0.2.7.full"
 }
 
 processResources {

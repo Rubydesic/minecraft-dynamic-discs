@@ -25,10 +25,10 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 
-// For support join https://discord.gg/v6v4pMv
+// For support join https://discord.gg/pPAabdafJU
 
 const val MOD_ID = "dynamic-discs"
-const val MOD_VERSION = "2.0.6"
+const val MOD_VERSION = "2.0.7"
 
 val dir: Path = Paths.get("dynamic-discs")
 val cacheDir: Path = dir.resolve("cache")
@@ -38,7 +38,7 @@ val dynamicRecordItem = DynamicRecordItem(Item.Properties().tab(CreativeModeTab.
 
 val log: Logger = LogManager.getLogger("Dynamic Discs")
 lateinit var ytdlBinaryFuture: Deferred<Path>
-lateinit var config: Config
+var config = Config()
 
 val isDedicatedServer = FabricLoader.getInstance().environmentType == EnvType.SERVER
 
@@ -74,18 +74,17 @@ fun readConfig() {
     val configPath = dir.resolve("config.json")
     if (Files.exists(configPath)) {
         try {
-            config = Gson().fromJson(Files.newInputStream(configPath).bufferedReader())
+            Files.newInputStream(configPath).bufferedReader().use { reader ->
+                config = Gson().fromJson(reader)
+            }
         } catch (ex: Exception) {
-            log.info("Failed to read config from config.json, resorting to default...")
-            config = Config()
+            log.info("Failed to read config from config.json")
+            return
         }
-    } else {
-        config = Config()
-        val out = Files.newOutputStream(configPath).bufferedWriter()
-        GsonBuilder().setPrettyPrinting().create().toJson(config, out)
-        out.close()
     }
-
+    Files.newOutputStream(configPath).bufferedWriter().use { writer ->
+        GsonBuilder().setPrettyPrinting().create().toJson(config, writer)
+    }
 }
 
 fun setupVelvet() {
