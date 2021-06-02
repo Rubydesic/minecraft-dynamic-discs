@@ -3,9 +3,11 @@ package ga.rubydesic.dmd.download
 import com.google.common.cache.CacheBuilder
 import com.google.gson.Gson
 import com.zakgof.velvetvideo.impl.FileSeekableInput
-import ga.rubydesic.dmd.*
 import ga.rubydesic.dmd.analytics.Analytics
-import ga.rubydesic.dmd.download.MusicSource.*
+import ga.rubydesic.dmd.cacheDir
+import ga.rubydesic.dmd.download.MusicSource.YOUTUBE
+import ga.rubydesic.dmd.fromJson
+import ga.rubydesic.dmd.log
 import ga.rubydesic.dmd.util.AudioStreamVelvet
 import ga.rubydesic.dmd.util.FileBufferedSeekableInput
 import kotlinx.coroutines.*
@@ -109,7 +111,7 @@ object MusicCache {
         getDownloadInfo: suspend () -> DownloadInfo?
     ): AudioPlaybackInfo? {
         try {
-            log.info("Try using existing file?: $path")
+            log.info("Try using existing file: $path")
             return getPlaybackInfoFromPath(path)
         } catch (ex: Exception) {
             log.info("Failed to use existing file... downloading to $path")

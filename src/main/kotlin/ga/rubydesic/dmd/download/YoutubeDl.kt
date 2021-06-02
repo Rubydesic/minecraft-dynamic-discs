@@ -3,12 +3,12 @@ package ga.rubydesic.dmd.download
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import ga.rubydesic.dmd.log
+import ga.rubydesic.dmd.openInsecureConnection
 import ga.rubydesic.dmd.runCommand
 import ga.rubydesic.dmd.util.SizedInputStream
 import ga.rubydesic.dmd.ytdlBinaryFuture
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.net.URL
 
 object YoutubeDl {
 
@@ -28,7 +28,7 @@ object YoutubeDl {
 
         val getStream = suspend {
             withContext(Dispatchers.IO) {
-                val connection = URL(realUrl).openConnection()
+                val connection = openInsecureConnection(realUrl)
                 headers.entrySet().forEach { (key, value) -> connection.setRequestProperty(key, value.asString) }
                 SizedInputStream(connection.getInputStream(), connection.contentLength)
             }

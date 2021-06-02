@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder
 import ga.rubydesic.dmd.analytics.Analytics
 import ga.rubydesic.dmd.game.ClientboundPlayMusicPacket
 import ga.rubydesic.dmd.game.DynamicRecordItem
+import ga.rubydesic.dmd.util.using
 import kotlinx.coroutines.*
 import net.fabricmc.api.EnvType
 import net.fabricmc.fabric.api.network.ClientSidePacketRegistry
@@ -18,11 +19,11 @@ import org.apache.commons.lang3.SystemUtils
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import java.io.File
-import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.file.attribute.PosixFilePermissions
 
 
 // For support join https://discord.gg/pPAabdafJU
@@ -150,11 +151,13 @@ fun downloadYtDlBinary() {
     val path = dir.resolve(if (SystemUtils.IS_OS_WINDOWS) "youtube-dl.exe" else "youtube-dl").toAbsolutePath()
     if (Files.exists(path)) {
         log.info("youtube-dl binary already exists")
-        if (path.toFile().setExecutable(true, false)) {
+        try {
+            Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("rwxrwxrwx"));
             log.info("Made youtube-dl binary executable")
-        } else {
-            log.info("Failed to make youtube-dl binary executable...")
+        } catch (ex: Exception) {
+            log.info("Failed to make youtube-dl binary executable...", ex)
         }
+
         log.info("Running youtube-dl --update")
         ytdlBinaryFuture = GlobalScope.async(Dispatchers.IO) {
             runCommand(path.toString(), "--update")
@@ -170,7 +173,13 @@ fun downloadYtDlBinary() {
         }
 
         ytdlBinaryFuture = GlobalScope.async(Dispatchers.IO) {
-            FileUtils.copyURLToFile(URL(downloadUrl), path.toFile())
+            using(
+                openInsecureConnection(downloadUrl).getInputStream(),
+                Files.newOutputStream(path)
+            ) { input, output ->
+                input.copyTo(output)
+            }
+
             log.info("Finished downloading youtube-dl binary")
             path
         }

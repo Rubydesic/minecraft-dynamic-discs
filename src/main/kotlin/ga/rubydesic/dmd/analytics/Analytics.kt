@@ -59,28 +59,33 @@ object Analytics {
         value: Int = -1,
         newSession: Boolean? = null
     ): Job = GlobalScope.launch {
-        val params = mutableListOf(
-            Pair("v", "1"),
-            Pair("t", "event"),
-            Pair("cid", id.await()),
-            Pair("ua", USER_AGENT),
-            Pair("tid", TRACKING_CODE),
-            Pair("ea", action),
-            Pair("ec", category),
-            Pair("an", MOD_ID),
-            Pair("av", MOD_VERSION),
-            Pair("cd1", javaVersion)
-        )
+        try {
+            val params = mutableListOf(
+                Pair("v", "1"),
+                Pair("t", "event"),
+                Pair("cid", id.await()),
+                Pair("ua", USER_AGENT),
+                Pair("tid", TRACKING_CODE),
+                Pair("ea", action),
+                Pair("ec", category),
+                Pair("an", MOD_ID),
+                Pair("av", MOD_VERSION),
+                Pair("cd1", javaVersion)
+            )
 
-        if (newSession == true) params.add(Pair("sc", "start"))
-        else if (newSession == false) params.add(Pair("sc", "end"))
+            if (newSession == true) params.add(Pair("sc", "start"))
+            else if (newSession == false) params.add(Pair("sc", "end"))
 
-        val language = language
-        if (language != null) params.add(Pair("ul", language))
-        if (label != null) params.add(Pair("el", label))
-        if (value > -1) params.add(Pair("ev", value.toString()))
+            val language = language
+            if (language != null) params.add(Pair("ul", language))
+            if (label != null) params.add(Pair("el", label))
+            if (value > -1) params.add(Pair("ev", value.toString()))
 
-        sendToAnalytics(params)
+            sendToAnalytics(params)
+        } catch (ex: Exception) {
+            // just log it, is ok if analytics are broken
+            log.debug(ex.stackTraceToString())
+        }
     }
 
     private suspend fun sendToAnalytics(params: Collection<Pair<String, String>>) = withContext(Dispatchers.IO) {

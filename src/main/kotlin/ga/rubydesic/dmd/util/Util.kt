@@ -2,7 +2,9 @@ package ga.rubydesic.dmd
 
 import com.google.gson.Gson
 import java.io.Reader
+import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLConnection
 import java.nio.ByteOrder
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
@@ -69,12 +71,18 @@ private val allTrustingSSLSocketFactory = run {
     sc.socketFactory
 }
 
-fun httpPost(url: String, body: ByteArray, fakeUserAgent: Boolean = false): Int {
-    val oldDefault = HttpsURLConnection.getDefaultSSLSocketFactory()
-    HttpsURLConnection.setDefaultSSLSocketFactory(allTrustingSSLSocketFactory)
+fun openInsecureConnection(url: String): URLConnection {
+    val conn = URL(url).openConnection()
 
-    val url = URL(url)
-    val conn = url.openConnection() as HttpsURLConnection
+    if (conn is HttpsURLConnection) {
+        conn.sslSocketFactory = allTrustingSSLSocketFactory
+    }
+
+    return conn
+}
+
+fun httpPost(url: String, body: ByteArray, fakeUserAgent: Boolean = false): Int {
+    val conn = openInsecureConnection(url) as HttpURLConnection
 
     conn.requestMethod = "POST"
     conn.doOutput = true
@@ -89,8 +97,6 @@ fun httpPost(url: String, body: ByteArray, fakeUserAgent: Boolean = false): Int 
         write(body)
         close()
     }
-
-    HttpsURLConnection.setDefaultSSLSocketFactory(oldDefault)
 
     return conn.responseCode
 }

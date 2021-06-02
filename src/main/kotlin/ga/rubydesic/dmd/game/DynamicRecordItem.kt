@@ -1,13 +1,19 @@
 package ga.rubydesic.dmd.game
 
 import ga.rubydesic.dmd.analytics.Analytics
+import ga.rubydesic.dmd.config
 import ga.rubydesic.dmd.download.MusicCache
 import ga.rubydesic.dmd.download.MusicSource
 import ga.rubydesic.dmd.log
+import ga.rubydesic.dmd.util.component1
+import ga.rubydesic.dmd.util.component2
+import ga.rubydesic.dmd.util.component3
+import ga.rubydesic.dmd.util.squared
 import io.netty.buffer.Unpooled
-import kotlinx.coroutines.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.launch
 import net.fabricmc.fabric.api.network.ServerSidePacketRegistry
-import net.fabricmc.fabric.api.server.PlayerStream
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.stats.Stats
 import net.minecraft.world.InteractionResult
@@ -40,10 +46,17 @@ class DynamicRecordItem(properties: Properties?) : Item(properties) {
                 log.info("Could not find a result for the search: $name")
                 return@launch
             }
-            PlayerStream.watching(ctx.level, ctx.clickedPos).forEach { player ->
-                val data = FriendlyByteBuf(Unpooled.buffer())
-                ClientboundPlayMusicPacket(MusicSource.YOUTUBE, ctx.clickedPos, id).write(data)
-                ServerSidePacketRegistry.INSTANCE.sendToPlayer(player, ClientboundPlayMusicPacket.packetId, data)
+
+            val pos = ctx.clickedPos!!
+            val (x, y, z) = pos
+            val maxDistSq = config.attenuationDistance.squared()
+            server.playerList.players.forEach { player ->
+                val playerDistSq = player.distanceToSqr(x.toDouble(), y.toDouble(), z.toDouble())
+                if (playerDistSq < maxDistSq) {
+                    val data = FriendlyByteBuf(Unpooled.buffer())
+                    ClientboundPlayMusicPacket(MusicSource.YOUTUBE, pos, id).write(data)
+                    ServerSidePacketRegistry.INSTANCE.sendToPlayer(player, ClientboundPlayMusicPacket.packetId, data)
+                }
             }
         }
     }
