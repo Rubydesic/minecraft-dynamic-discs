@@ -151,12 +151,7 @@ fun downloadYtDlBinary() {
     val path = dir.resolve(if (SystemUtils.IS_OS_WINDOWS) "youtube-dl.exe" else "youtube-dl").toAbsolutePath()
     if (Files.exists(path)) {
         log.info("youtube-dl binary already exists")
-        try {
-            Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("rwxrwxrwx"));
-            log.info("Made youtube-dl binary executable")
-        } catch (ex: Exception) {
-            log.info("Failed to make youtube-dl binary executable...", ex)
-        }
+        setYTDLPermission(path)
 
         log.info("Running youtube-dl --update")
         ytdlBinaryFuture = GlobalScope.async(Dispatchers.IO) {
@@ -181,9 +176,19 @@ fun downloadYtDlBinary() {
             }
 
             log.info("Finished downloading youtube-dl binary")
+            setYTDLPermission(path)
             path
         }
 
+    }
+}
+
+fun setYTDLPermission(path: Path){
+    try {
+        Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("rwxrwxrwx"));
+        log.info("Made youtube-dl binary executable")
+    } catch (ex: Exception) {
+        log.info("Failed to make youtube-dl binary executable...", ex)
     }
 }
 
