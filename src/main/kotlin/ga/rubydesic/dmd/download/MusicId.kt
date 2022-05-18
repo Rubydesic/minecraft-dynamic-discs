@@ -1,6 +1,6 @@
 package ga.rubydesic.dmd.download
 
-import ga.rubydesic.dmd.toHex
+import ga.rubydesic.dmd.util.toHex
 
 data class MusicId(
     val source: MusicSource,

@@ -1,6 +1,6 @@
 package ga.rubydesic.dmd.util
 
-import net.minecraft.core.BlockPos
+import net.minecraft.util.math.BlockPos
 
 operator fun BlockPos.component1() = x
 operator fun BlockPos.component2() = y

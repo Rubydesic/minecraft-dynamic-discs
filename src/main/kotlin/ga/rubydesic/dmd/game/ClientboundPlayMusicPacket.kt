@@ -3,13 +3,14 @@ package ga.rubydesic.dmd.game
 import ga.rubydesic.dmd.MOD_ID
 import ga.rubydesic.dmd.download.MusicId
 import ga.rubydesic.dmd.download.MusicSource
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.network.ClientSidePacketRegistry
 import net.fabricmc.fabric.api.network.PacketConsumer
 import net.fabricmc.fabric.api.network.PacketContext
-import net.minecraft.client.Minecraft
-import net.minecraft.core.BlockPos
-import net.minecraft.network.FriendlyByteBuf
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.client.MinecraftClient
+import net.minecraft.network.PacketByteBuf
+import net.minecraft.util.Identifier
+import net.minecraft.util.math.BlockPos
 
 data class ClientboundPlayMusicPacket constructor(
     val source: MusicSource,
@@ -17,31 +18,29 @@ data class ClientboundPlayMusicPacket constructor(
     val id: String
 ) {
     companion object {
-        val packetId = ResourceLocation(MOD_ID, "play_music")
+        val packetId = Identifier(MOD_ID, "play_music")
 
-        fun register(registry: ClientSidePacketRegistry) {
-            registry.register(packetId, object : PacketConsumer {
-                override fun accept(ctx: PacketContext, data: FriendlyByteBuf) {
-                    val (source, pos, id) = ClientboundPlayMusicPacket(data)
-                    ctx.taskQueue.execute {
-                        Minecraft.getInstance().levelRenderer
+        fun register() {
+            ClientPlayNetworking
+                .registerGlobalReceiver(packetId) { client, _, buf, _ ->
+                    val (source, pos, id) = ClientboundPlayMusicPacket(buf)
+                    client.executeTask {
+                        MinecraftClient.getInstance().worldRenderer
                             .playYoutubeMusic(MusicId(source, id), pos)
                     }
-                }
-            })
+            }
         }
     }
 
-    constructor(buf: FriendlyByteBuf) : this(
+    constructor(buf: PacketByteBuf) : this(
         MusicSource.values[buf.readByte().toInt()],
         buf.readBlockPos(),
         buf.readCharSequence(buf.readableBytes(), Charsets.UTF_8).toString()
     )
 
-    fun write(buf: FriendlyByteBuf) {
+    fun write(buf: PacketByteBuf) {
         buf.writeByte(source.ordinal)
         buf.writeBlockPos(pos)
         buf.writeCharSequence(id, Charsets.UTF_8)
     }
-
 }
