@@ -1,8 +1,11 @@
 package ga.rubydesic.dmd.analytics
 
 import ga.rubydesic.dmd.*
+import ga.rubydesic.dmd.util.USER_AGENT
+import ga.rubydesic.dmd.util.getJavaVersion
+import ga.rubydesic.dmd.util.httpPost
 import kotlinx.coroutines.*
-import net.minecraft.client.Minecraft
+import net.minecraft.client.MinecraftClient
 import org.apache.commons.io.FileUtils
 import java.net.URLEncoder
 import java.nio.charset.Charset
@@ -30,7 +33,7 @@ object Analytics {
         }
     }
 
-    private val language get() = if (isDedicatedServer) null else Minecraft.getInstance()?.languageManager?.selected?.code
+    private val language get() = if (isDedicatedServer) null else MinecraftClient.getInstance()?.languageManager?.language?.code
     private val javaVersion = getJavaVersion()
     private val isAnalyticsDisabled get() =
         System.getProperty("dmd.analytics") == "disable" || !config.analytics

@@ -5,15 +5,17 @@ import com.google.gson.GsonBuilder
 import ga.rubydesic.dmd.analytics.Analytics
 import ga.rubydesic.dmd.game.ClientboundPlayMusicPacket
 import ga.rubydesic.dmd.game.DynamicRecordItem
+import ga.rubydesic.dmd.util.fromJson
+import ga.rubydesic.dmd.util.openInsecureConnection
+import ga.rubydesic.dmd.util.runCommand
 import ga.rubydesic.dmd.util.using
 import kotlinx.coroutines.*
 import net.fabricmc.api.EnvType
-import net.fabricmc.fabric.api.network.ClientSidePacketRegistry
 import net.fabricmc.loader.api.FabricLoader
-import net.minecraft.core.Registry
-import net.minecraft.resources.ResourceLocation
-import net.minecraft.world.item.CreativeModeTab
-import net.minecraft.world.item.Item
+import net.minecraft.item.Item
+import net.minecraft.item.ItemGroup
+import net.minecraft.util.Identifier
+import net.minecraft.util.registry.Registry
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.SystemUtils
 import org.apache.logging.log4j.LogManager
@@ -35,7 +37,7 @@ val dir: Path = Paths.get("dynamic-discs")
 val cacheDir: Path = dir.resolve("cache")
 
 
-val dynamicRecordItem = DynamicRecordItem(Item.Properties().tab(CreativeModeTab.TAB_MISC).stacksTo(1))
+val dynamicRecordItem = DynamicRecordItem(Item.Settings().maxCount(1).group(ItemGroup.MISC))
 
 val log: Logger = LogManager.getLogger("Dynamic Discs")
 lateinit var ytdlBinaryFuture: Deferred<Path>
@@ -60,10 +62,10 @@ fun init() {
         }
     })
 
-    Registry.register(Registry.ITEM, ResourceLocation(MOD_ID, "dynamic_disc"), dynamicRecordItem)
+    Registry.register(Registry.ITEM, Identifier(MOD_ID, "dynamic_disc"), dynamicRecordItem)
 
     if (!isDedicatedServer) {
-        ClientboundPlayMusicPacket.register(ClientSidePacketRegistry.INSTANCE)
+        ClientboundPlayMusicPacket.register()
     }
 
     deleteOldCache()
@@ -119,7 +121,7 @@ private fun extractFile(name: String, base: String, target: Path) {
     val dest = target.resolve(name)
     if (!Files.exists(dest)) {
         log.info("Extracting /$base/$name...")
-        Files.copy(object {}.javaClass.getResourceAsStream("/$base/$name"), dest)
+        object {}.javaClass.getResourceAsStream("/$base/$name")?.let { Files.copy(it, dest) }
     }
 }
 
@@ -185,7 +187,7 @@ fun downloadYtDlBinary() {
 
 fun setYTDLPermission(path: Path){
     try {
-        Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("rwxrwxrwx"));
+        Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("rwxrwxrwx"))
         log.info("Made youtube-dl binary executable")
     } catch (ex: Exception) {
         log.info("Failed to make youtube-dl binary executable...", ex)
