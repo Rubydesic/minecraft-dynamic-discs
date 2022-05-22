@@ -29,7 +29,7 @@ import java.nio.file.attribute.PosixFilePermissions
 // For support join https://discord.gg/pPAabdafJU
 
 const val MOD_ID = "dynamic-discs"
-const val MOD_VERSION = "2.0.7"
+const val MOD_VERSION = "2.1.0"
 
 val dir: Path = Paths.get("dynamic-discs")
 val cacheDir: Path = dir.resolve("cache")
@@ -89,7 +89,7 @@ fun readConfig() {
 }
 
 fun setupVelvet() {
-    val target = Paths.get(System.getProperty("user.home"), ".velvet-video", "natives", "0.2.7.full")
+    val target = Paths.get(System.getProperty("user.home"), ".velvet-video", "natives", "0.2.8.full")
     Files.createDirectories(target)
 
     if (SystemUtils.IS_OS_WINDOWS) {
@@ -147,29 +147,36 @@ fun clearCacheIfOutdated() {
     }
 }
 
+private enum class YoutubeDlPlatform(
+    val fileName: String,
+    val downloadUrl: String,
+    val isCurrentPlatform: Boolean
+) {
+    WINDOWS("yt-dlp.exe", "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe", SystemUtils.IS_OS_WINDOWS),
+    MACOS("yt-dlp_macos", "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos", SystemUtils.IS_OS_MAC),
+    LINUX("yt-dlp", "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp", SystemUtils.IS_OS_LINUX)
+}
+
 fun downloadYtDlBinary() {
-    val path = dir.resolve(if (SystemUtils.IS_OS_WINDOWS) "youtube-dl.exe" else "youtube-dl").toAbsolutePath()
+    val currentPlatform = YoutubeDlPlatform.values().find { it.isCurrentPlatform }
+        ?: throw IllegalStateException("Non-valid OS detected (not Windows, Linux, or Mac)")
+
+    log.info("Detected OS is ${currentPlatform.name}, downloading appropriate youtube-dl binary from ${currentPlatform.downloadUrl}")
+    val path = dir.resolve(currentPlatform.fileName).toAbsolutePath()
+
     if (Files.exists(path)) {
         log.info("youtube-dl binary already exists")
         setYTDLPermission(path)
 
-        log.info("Running youtube-dl --update")
+        log.info("Updating youtube-dl")
         ytdlBinaryFuture = GlobalScope.async(Dispatchers.IO) {
             runCommand(path.toString(), "--update")
             path
         }
     } else {
-        val downloadUrl = if (SystemUtils.IS_OS_WINDOWS) {
-            log.info("Detected OS is Windows, downloading Windows youtube-dl binary")
-            "https://yt-dl.org/downloads/latest/youtube-dl.exe"
-        } else {
-            log.info("Detected OS is not Windows, downloading MacOS/Linux youtube-dl binary")
-            "https://yt-dl.org/downloads/latest/youtube-dl"
-        }
-
         ytdlBinaryFuture = GlobalScope.async(Dispatchers.IO) {
             using(
-                openInsecureConnection(downloadUrl).getInputStream(),
+                openInsecureConnection(currentPlatform.downloadUrl).getInputStream(),
                 Files.newOutputStream(path)
             ) { input, output ->
                 input.copyTo(output)

@@ -1,5 +1,7 @@
 package ga.rubydesic.dmd
 
+import com.google.common.primitives.Ints
+import com.google.common.primitives.Shorts
 import com.google.gson.Gson
 import java.io.Reader
 import java.net.HttpURLConnection
@@ -27,14 +29,6 @@ fun ByteArray.setShort(index: Int, value: Short, order: ByteOrder) {
 }
 
 fun ByteArray.getShort(index: Int) = getShort(index, ByteOrder.nativeOrder())
-
-fun ByteArray.getShort(index: Int, order: ByteOrder): Short {
-    return if (order == ByteOrder.LITTLE_ENDIAN) {
-        ((this[index + 1].toInt() shl 8) or (this[index].toInt() and 0xFF)).toShort()
-    } else {
-        ((this[index].toInt() shl 8) or (this[index + 1].toInt() and 0xFF)).toShort()
-    }
-}
 
 inline fun <reified T> Gson.fromJson(json: Reader) = fromJson(json, T::class.java)
 inline fun <reified T> Gson.fromJson(json: String) = fromJson(json, T::class.java)
@@ -134,4 +128,20 @@ fun getYoutubeVideoId(s: String): String? {
         fromHexString(matcher.group(1))
     else
         null
+}
+
+fun ByteArray.getInt(index: Int, order: ByteOrder = ByteOrder.nativeOrder()): Int {
+    return if (order == ByteOrder.BIG_ENDIAN) {
+        Ints.fromBytes(this[index], this[index + 1], this[index + 2], this[index + 3])
+    } else {
+        Ints.fromBytes(this[index + 3], this[index + 2], this[index + 1], this[index])
+    }
+}
+
+fun ByteArray.getShort(index: Int, order: ByteOrder = ByteOrder.nativeOrder()): Short {
+    return if (order == ByteOrder.BIG_ENDIAN) {
+        Shorts.fromBytes(this[index], this[index + 1])
+    } else {
+        Shorts.fromBytes(this[index + 1], this[index])
+    }
 }
